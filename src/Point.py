@@ -11,3 +11,10 @@ class PointU(Point):
 
 class PointE(Point):
   pass
+
+class Ship:
+  def __init__(self, ID, length, alivePoints, shotPoints=[]):
+    self.ID = ID
+    self.length = length
+    self.alivePoints = alivePoints
+    self.shotPoints = shotPoints
