@@ -14,34 +14,37 @@ ABlist = {
 }
 
 def main():
-  Board.generate()
 
-class Board:
+  # boot operations
+  generate(),placeShips()
 
-  @staticmethod
-  def generate():
-    '''
-    Generates both boards as dictionaries pointing to class instances
-    '''
-    boardU = {} 
-    boardE = {}
-    for x in range(1, 11):
-      for y in range(1, 11):
+boardU = {} 
+boardE = {}
 
-        # assigns string value to tempname, for example C4
-        tempname = ABlist[x] + str(y)
+def generate():
+  '''
+  Generates both boards as dictionaries pointing to class instances
+  '''    
+  for x in range(1, 11):
+    for y in range(1, 11):
 
-        # assigns given string value to these two to-be instance variables
-        tempname1 = tempname
-        tempname2 = tempname
+      # assigns string value to tempname, for example C4
+      tempname = ABlist[x] + str(y)
 
-        # instance variables than can be invoked by the point name
-        tempname1 = Point.PointU(tempname, (x, y))
-        tempname2 = Point.PointE(tempname, (x, y))
+      # assigns given string value to these two to-be instance variables
+      tempname1 = tempname
+      tempname2 = tempname
 
-        # dictionaries that have "coordinate names" for keys, pointers to their class instance as values
-        boardU[tempname] = tempname1
-        boardE[tempname] = tempname2
+      # instance variables than can be invoked by the point name
+      tempname1 = Point.PointU(tempname, (x, y))
+      tempname2 = Point.PointE(tempname, (x, y))
+
+      # dictionaries that have "coordinate names" for keys, pointers to their class instance as values
+      boardU[tempname] = tempname1
+      boardE[tempname] = tempname2
+
+def placeShips():
+  pass
 
 if __name__ == '__main__':
 	main()
