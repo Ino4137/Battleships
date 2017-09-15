@@ -1,5 +1,5 @@
 import Point
-import random, logging
+import random, sys
 
 # declaration of dictionaries used for keeping track of positions on boards
 boardU = { } 
@@ -21,32 +21,78 @@ ABlist = {
   10:'J',
 }
 
-# ship length and ship count 
-# TODO MAKE IT POSSIBLE FOR MORE THAN 1 SHIP TO PASS THROUGH
+# ship length and ship count
 ShipFrameU = [
-  [6,1],
   [5,1],
   [4,1],
+  [3,1],
   [3,1],
   [2,1]
 ]
 ShipFrameE = [
-  [6,1],
   [5,1],
   [4,1],
   [3,1],
+  [3,1],
   [2,1]
 ]
+shotLog = []
+hitLog = []
 
 def main():
+  '''
+  Starting point, boot operations and game loop
+  '''
   global finished
-  # boot operations
+  
   generate()
-  #placeShips(boardU),placeShips(boardE)
-
   genShips(boardU, ShipFrameU)
+
+  # allows for the second call of the genShips method
   finished = False
   genShips(boardE, ShipFrameE)
+
+  # game loop
+  TURN = "USER"
+  gameOver = False
+  while not gameOver:
+    print(shotsTakenU())
+
+    # users's turn beginning
+    print("---Your turn. Type 'help' if needed---")
+    try:
+      inp = input(": ")
+      print(inp)
+
+      # help command
+      if inp == "help":
+        print("Type point's coordinate NAME to shoot, eg: d5, E7\nUse 'exit' to turn the game off")
+        continue
+      
+      # exit command
+      if inp == "exit":
+        print("Sayonara. Exitting the game")
+        gameOver = True
+        continue
+
+      # test is a given point exists on the board
+      if inp[0].upper() + inp[1:] in boardE.keys():
+        print ("match")
+
+      else:
+        print("no match")
+
+    except TypeError:
+      print("TypeError: wrong input type")
+      continue
+
+
+
+def shotsTakenU():
+  '''
+  Returns user's shot log
+  '''
+  pass
 
 def generate():
   '''
