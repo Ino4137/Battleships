@@ -77,7 +77,7 @@ def placeShips(board):
       alignment = random.randint(0,1)
 
       # random starting point of the ship
-      startX = random.randint(1, 10--ShipFrame[l][0])
+      startX = random.randint(1, 10-ShipFrame[l][0])
       startY = random.randint(1, 10)
 
       if alignment == 1:
