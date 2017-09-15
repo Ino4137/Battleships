@@ -21,19 +21,32 @@ ABlist = {
   10:'J',
 }
 
-# ship length and ship count
-ShipFrame = [
+# ship length and ship count 
+# TODO MAKE IT POSSIBLE FOR MORE THAN 1 SHIP TO PASS THROUGH
+ShipFrameU = [
+  [6,1],
   [5,1],
   [4,1],
-  [3,2],
+  [3,1],
+  [2,1]
+]
+ShipFrameE = [
+  [6,1],
+  [5,1],
+  [4,1],
+  [3,1],
   [2,1]
 ]
 
 def main():
-
+  global finished
   # boot operations
   generate()
-  placeShips(boardU),placeShips(boardE)
+  #placeShips(boardU),placeShips(boardE)
+
+  genShips(boardU, ShipFrameU)
+  finished = False
+  genShips(boardE, ShipFrameE)
 
 def generate():
   '''
@@ -59,85 +72,101 @@ def generate():
       boardU[tempname] = tempname1
       boardE[tempname] = tempname2
 
-def placeShips(board):
+finished = False
+shipID = -1
+def genShips(board, ShipFrame):
   '''
-  Randomizes the position of the ships, makes sure they do not overlap
+  Ship generator. Places all of the ships on a board.
   '''
-  ID = 0
+  global shipID
+  global finished
 
-  # for all ships 
-  for l in range(4):
+  shipID += 1
 
-    beg = ShipFrame[l][0] 
-    end = ShipFrame[l][1]
+  if shipID == 5:
+    finished = True
+    shipID = -1
 
-    # while number of ships placed is not 0
-    while end != 0:
-      # horizontal = 1, vertical = 0
-      alignment = random.randint(0,1)
+  # debug
+  print(ShipFrame[shipID][0])
+  print(shipID)
+  print(finished)
 
-      # random starting point of the ship
-      startX = random.randint(1, 10-ShipFrame[l][0])
-      startY = random.randint(1, 10)
 
-      if alignment == 1:
-        start = [startX, startY]
+  while not finished:
+
+    # horizontal = 1, vertical = 0
+    alignment = random.randint(0,1)
+
+    # random starting point of the ship
+    startX = random.randint(1, 10)
+    startY = random.randint(1, 10-ShipFrame[shipID][0])
+
+    if alignment == 1:
+      start = [startX, startY]
+      SHIP = getInitShipPoints(start, 1, shipID, ShipFrame)
+    else:
+      start = [startY, startX]
+      SHIP = getInitShipPoints(start, 0, shipID, ShipFrame)
+
+    COUNT = 0
+    for point in SHIP:
+      if validatePoint(point, board) == False:
+        # point is taken, generste new ones
+        print("broken")
+        break 
       else:
-        start = [startY, startX]
+        COUNT += 1
 
-      # loops over all the points under the ship
-      try:
-        for unit in range(ShipFrame[l][0] + 1):
-          #print("debug.unit: " + str(unit))
-     
-          #print("debug.1")
-
-          # if a point is taken 
-          if False == validatePoint(start, board):
-            raise Exception
-          else:
-            beg -= 1
-            start[alignment] += unit
-
-          #print(start)
-
-          # if all points returned True
-          if ShipFrame[l][0] - unit == 0:
-
-            # reset the assisting list of points
-            shipPoints = [ ] 
-
-            # decrement remaining count
-            end -= 1
-
-            # get a new pointer
-            tempID = ID
-
-            # once more loops over the points of the ship to get their instances
-            for num in range(ShipFrame[l][0]):
-              for key in board:
-                if [start[alignment] + ShipFrame[l][0] - 1 - num, start[int(abs(alignment-1))]] == list(board[key].XY):
-                  print(board[key].name)
-                  shipPoints.append(board[key].name)
-                  board[key].taken = True
-                  print(shipPoints)
-
-            # finally, crates the variable instance of Ship class
-            tempID = Point.Ship(ID, ShipFrame[l][0], shipPoints)
-            print(tempID.alivePoints)
-            # increment ID
-            ID += 1 
-            #print("debug.ID = " + str(ID))
-
-      # if a point returned False
-      except Exception as e:
-        logging.exception("message")
-
-        # not decrementing the ship num, jumping to next loop in Run.py:69
+        if COUNT == ShipFrame[shipID][0]:
+          afterValidating(SHIP, board, shipID, ShipFrame)
+          genShips(board, ShipFrame)
         continue
+    continue
 
+def afterValidating(SHIP, board, shipID, ShipFrame):
+  '''
+  Continuation of the genShips method, after making sure that all of the positions are not taken
+  '''
 
-      
+  # debug
+  print("I made it!" + str(SHIP))
+
+  shipPoints = [ ]
+  
+  # lists all the 'Real' Points, sets them taken
+  for point in SHIP:
+    for key in board:
+      if point == list(board[key].XY):       
+        shipPoints.append(board[key])
+        board[key].taken = True
+
+        # debug
+        #print(board[key].name)
+
+  # pointer to a current ID value 
+  tempID = shipID
+
+  # creates the instance of the Ship class
+  tempID = Point.Ship(shipID, len(SHIP), shipPoints)   
+
+  # decrements the ammount of the current ship
+  ShipFrame[shipID][1] -= 1 
+
+def getInitShipPoints(cords, alignment, shipID, ShipFrame):
+  '''
+  Returns a list of ships points
+  '''
+  SHIP = []
+
+  if alignment == 1:
+    for p in range(ShipFrame[shipID][0]):
+      SHIP.append([cords[0], cords[1] + p])
+  else:
+    for p in range(ShipFrame[shipID][0]):
+      SHIP.append([cords[0] + p, cords[1]])
+  return SHIP
+ 
 def validatePoint(point, board):
   '''
   Checks if a given point is taken
