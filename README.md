@@ -8,6 +8,6 @@ Currently, the game has a simple GUI on the command line, listing all the action
 
 TODO:
 
-*Implement visualize
+* Implement visualize
 
-*Advanced guessing AI
+* Advanced guessing AI
