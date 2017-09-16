@@ -1,5 +1,6 @@
 import Point
 import random, sys
+import subprocess as sp
 
 # declaration of dictionaries used for keeping track of positions on boards
 boardU = { } 
@@ -38,13 +39,18 @@ ShipFrameE = [
 ]
 shotLog = []
 hitLog = []
+shipKillLog = []
+
+shotLogE = []
+hitLogE = []
+shipKillLogE = []
 
 def main():
   '''
   Starting point, boot operations and game loop
   '''
-  global finished
-  
+  global finished, shotLog, hitLog, TURN
+
   generate()
   genShips(boardU, ShipFrameU)
 
@@ -56,13 +62,30 @@ def main():
   TURN = "USER"
   gameOver = False
   while not gameOver:
-    print(shotsTakenU())
+
+    # if all ships sunk, end game
+    if len(shipKillLog) == len(ShipFrameU):
+      print("You have won!")
+      sys.exit(0)
+    if len(shipKillLogE) == len(ShipFrameE):
+      print("You have lost.")
+      sys.exit(0)
+      
+
+    tmp = sp.call('clear', shell=True)
+    print("---Enemy turn---")
+    print("Shots taken: {0}".format(str(shotLogE)))
+    print("Hits: {0}".format(str(hitLogE)))
+    print("Ships sunk: {0}".format(str(shipKillLogE)))
 
     # users's turn beginning
-    print("---Your turn. Type 'help' if needed---")
+    TURN = "USER"
+    print("---Your turn---")
+    print("Shots taken: {0}".format(str(shotLog)))
+    print("Hits: {0}".format(str(hitLog)))
+    print("Ships sunk: {0}".format(str(shipKillLog)))
     try:
       inp = input(": ")
-      print(inp)
 
       # help command
       if inp == "help":
@@ -71,28 +94,82 @@ def main():
       
       # exit command
       if inp == "exit":
-        print("Sayonara. Exitting the game")
-        gameOver = True
+        print("Exitting the game")
+        sys.exit(0)
+
+      # test if point was shot at
+      if inp.upper() not in shotLog:
+        if inp.upper() not in hitLog:
+
+          # test is a given point exists on the board
+          if inp.upper() in boardE.keys():
+
+            # shoots the point, logs the shot
+            if shoot(inp, boardE):
+              hitLog.append(inp.upper())
+            else:
+              shotLog.append(inp.upper())
+
+          else:
+            print("Given point is not on the board")
+            continue
+
+        elif inp.upper() in boardE.keys():
+          print("Given point was already shot at")
+          continue
+
+      elif inp.upper() in boardE.keys():
+        print("Given point was already shot at")
         continue
 
-      # test is a given point exists on the board
-      if inp[0].upper() + inp[1:] in boardE.keys():
-        print ("match")
-
       else:
-        print("no match")
+        print("Not a valid command. Type 'help' for help")
+        continue
 
     except TypeError:
       print("TypeError: wrong input type")
       continue
 
+    # enemy turn
+    # random shot
+    TURN = "E"
+    randomDifficulty()
 
 
-def shotsTakenU():
+def randomDifficulty():
+  while True:
+    # random point
+    randpoint = random.choice(list(boardE.keys()))
+
+    # if it was not shot at before
+    if randpoint not in shotLogE:
+      if randpoint not in hitLogE:
+
+        # shoots, logs the result
+        if shoot(randpoint, boardU):
+          hitLogE.append(randpoint.upper())
+          break
+        else:
+          shotLogE.append(randpoint.upper())
+          break
+
+
+def shoot(point, board):
   '''
-  Returns user's shot log
+  Shoots a given point on a given board, returns True is it is a hit, False if not
   '''
-  pass
+  point = point.upper()
+  board[point].shot = True
+  if board[point].ship is not None:
+    board[point].ship.alivePoints.remove(board[point])
+    board[point].ship.shotPoints.append(board[point])
+    if not board[point].ship.alivePoints:
+      if TURN == "E":
+        shipKillLogE.append(board[point].ship.length)
+      else:
+        shipKillLog.append(board[point].ship.length)
+    return True
+  return False
 
 def generate():
   '''
@@ -133,12 +210,6 @@ def genShips(board, ShipFrame):
     finished = True
     shipID = -1
 
-  # debug
-  print(ShipFrame[shipID][0])
-  print(shipID)
-  print(finished)
-
-
   while not finished:
 
     # horizontal = 1, vertical = 0
@@ -175,9 +246,6 @@ def afterValidating(SHIP, board, shipID, ShipFrame):
   Continuation of the genShips method, after making sure that all of the positions are not taken
   '''
 
-  # debug
-  print("I made it!" + str(SHIP))
-
   shipPoints = [ ]
   
   # lists all the 'Real' Points, sets them taken
@@ -187,14 +255,17 @@ def afterValidating(SHIP, board, shipID, ShipFrame):
         shipPoints.append(board[key])
         board[key].taken = True
 
-        # debug
-        #print(board[key].name)
-
   # pointer to a current ID value 
   tempID = shipID
 
   # creates the instance of the Ship class
   tempID = Point.Ship(shipID, len(SHIP), shipPoints)   
+
+  # assigns all the ships points to the ship
+  for point in SHIP:
+    for key in board:
+      if point == list(board[key].XY):       
+        board[key].ship = tempID 
 
   # decrements the ammount of the current ship
   ShipFrame[shipID][1] -= 1 
